@@ -11,5 +11,4 @@ SkillScope is a career guidance web app that helps students explore job roles, a
 ### Tech Stack
 Python, Streamlit, Pandas, Google Gemini API, SQLite, HTML/CSS.
 
-### About
-This project was built to help students understand their career options and identify skill gaps before applying for jobs.
+
