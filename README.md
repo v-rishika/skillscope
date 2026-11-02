@@ -6,34 +6,34 @@ SkillScope is a career intelligence web application designed to help students an
 
 Built with Python and Streamlit, SkillScope combines job-market data, resume analysis, and AI-powered career guidance in one platform.
 
-## ✨ Features
+Features
 
-### 1. Skill Analyzer
+1. Skill Analyzer
 - Enter your existing technical skills.
 - Discover the top five job roles that match your skills.
 - Explore matched skills and missing skills for each role.
 - Identify skills worth learning for your target career.
 
-### 2. AI Career Guide
+2. AI Career Guide
 - Get personalized career guidance using Google's Gemini AI.
 - Ask questions about career paths, technical skills, and interview preparation.
 - Receive practical learning plans and recommendations.
 - Create and revisit saved conversations.
 
-### 3. Resume Analyzer
+3. Resume Analyzer
 - Upload your resume in PDF or DOCX format.
 - Extract technical skills from your resume.
 - Discover suitable career roles based on your skills.
 - View an ATS-style compatibility score for a selected role.
 - Review the score breakdown, matched keywords, and missing keywords.
 
-### 4. Job Description Matcher
+4. Job Description Matcher
 - Upload a job description or paste its text.
 - Compare the job requirements with your resume.
 - Identify matching skills and missing skills.
 - Understand how your current skill set aligns with a specific opportunity.
 
-## 🛠️ Tech Stack
+Tech Stack
 
 | Technology | Purpose |
 |---|---|
@@ -47,7 +47,7 @@ Built with Python and Streamlit, SkillScope combines job-market data, resume ana
 | HTML and CSS | Interface styling |
 | Git and GitHub | Version control and source code hosting |
 
-## 📁 Project Structure
+📁 Project Structure
 
 ```text
 ai-job-market-analyzer/
@@ -76,24 +76,24 @@ ai-job-market-analyzer/
     └── styles.py
 ```
 
-## 🚀 Getting Started
+Getting Started
 
 Follow these steps to run SkillScope locally.
 
-### Prerequisites
+Prerequisites
 
 - Python 3.10 or a compatible Python version supported by the project dependencies.
 - Git
 - A Google Gemini API key for AI Career Guide functionality.
 
-### 1. Clone the repository
+1. Clone the repository
 
 ```bash
 git clone https://github.com/v-rishika/skillscope.git
 cd skillscope
 ```
 
-### 2. Create a virtual environment
+2. Create a virtual environment
 
 **Windows:**
 
@@ -107,13 +107,13 @@ Activate it:
 .venv\Scripts\Activate.ps1
 ```
 
-### 3. Install dependencies
+3. Install dependencies
 
 ```bash
 pip install -r requirements.txt
 ```
 
-### 4. Configure your Gemini API key
+4. Configure your Gemini API key
 
 Create a `.env` file in the project root directory:
 
@@ -123,9 +123,8 @@ GEMINI_API_KEY=your_gemini_api_key_here
 
 Replace the placeholder with your own API key.
 
-**Security note:** Never commit your `.env` file or publish your API key. Keep secrets out of your source code and GitHub repository.
 
-### 5. Run the application
+5. Run the application
 
 ```bash
 streamlit run app.py
@@ -133,7 +132,7 @@ streamlit run app.py
 
 Streamlit will provide a local URL where you can access SkillScope in your browser.
 
-## 📊 About the Analysis
+About the Analysis
 
 SkillScope uses a job-market dataset to identify skills associated with different roles and compare those requirements with user-provided skills or resume content.
 
@@ -141,13 +140,8 @@ The application provides skill-overlap indicators and ATS-style compatibility es
 
 These scores are **estimates, not hiring probabilities**. Actual hiring decisions and ATS behavior vary across employers and recruitment systems.
 
-## 🔐 Privacy and Security
 
-- Keep API keys and other secrets out of version control.
-- Avoid uploading resumes containing sensitive information unless you are comfortable processing them through the application.
-- Review the configuration of any external AI service before submitting personal information.
-
-## 🎯 Project Goals
+Project Goals
 
 SkillScope aims to make career exploration more practical by helping users:
 
@@ -157,11 +151,11 @@ SkillScope aims to make career exploration more practical by helping users:
 - Evaluate resume alignment with target roles.
 - Receive AI-assisted career guidance.
 
-## 👩‍💻 Author
+Author
 
 **Rishika V**
 
-B.Tech Student | Aspiring Software Developer & Cybersecurity Professional
+B.Tech Student | 
 
 GitHub: [@v-rishika](https://github.com/v-rishika)
 
