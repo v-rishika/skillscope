@@ -1,124 +1,112 @@
 
-import sqlite3
-from pathlib import Path
-
-DB_PATH = Path(__file__).resolve().parent.parent / "data" / "skillscope.db"
-
-
-def get_connection():
-    DB_PATH.parent.mkdir(parents=True, exist_ok=True)
-
-    connection = sqlite3.connect(DB_PATH)
-    connection.row_factory = sqlite3.Row
-    connection.execute("PRAGMA foreign_keys = ON")
-
-    return connection
+import streamlit as st
+from datetime import datetime
 
 
 def initialize_chat_storage():
-    with get_connection() as connection:
-        connection.executescript(
-            """
-            CREATE TABLE IF NOT EXISTS conversations (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                title TEXT NOT NULL DEFAULT 'New conversation',
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
-            );
+    if "chat_conversations" not in st.session_state:
+        st.session_state.chat_conversations = {}
 
-            CREATE TABLE IF NOT EXISTS messages (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                conversation_id INTEGER NOT NULL,
-                role TEXT NOT NULL CHECK (role IN ('user', 'assistant')),
-                content TEXT NOT NULL,
-                created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
-                FOREIGN KEY (conversation_id)
-                    REFERENCES conversations(id)
-                    ON DELETE CASCADE
-            );
-            """
-        )
+    if "next_conversation_id" not in st.session_state:
+        st.session_state.next_conversation_id = 1
+
 
 def create_conversation(title="New conversation"):
-    with get_connection() as connection:
-        cursor = connection.execute(
-            "INSERT INTO conversations (title) VALUES (?)",
-            (title,),
-        )
-        return cursor.lastrowid
+    initialize_chat_storage()
+
+    conversation_id = st.session_state.next_conversation_id
+    st.session_state.next_conversation_id += 1
+
+    now = datetime.now().isoformat()
+
+    st.session_state.chat_conversations[conversation_id] = {
+        "id": conversation_id,
+        "title": title,
+        "created_at": now,
+        "updated_at": now,
+        "messages": [],
+    }
+
+    return conversation_id
 
 
 def get_conversations():
-    with get_connection() as connection:
-        rows = connection.execute(
-            """
-            SELECT id, title, created_at, updated_at
-            FROM conversations
-            ORDER BY updated_at DESC, id DESC
-            """
-        ).fetchall()
+    initialize_chat_storage()
 
-        return [dict(row) for row in rows]
+    conversations = st.session_state.chat_conversations.values()
+
+    return sorted(
+        [
+            {
+                "id": chat["id"],
+                "title": chat["title"],
+                "created_at": chat["created_at"],
+                "updated_at": chat["updated_at"],
+            }
+            for chat in conversations
+        ],
+        key=lambda chat: chat["updated_at"],
+        reverse=True,
+    )
 
 
 def save_message(conversation_id, role, content):
+    initialize_chat_storage()
+
     if role not in ("user", "assistant"):
-        raise ValueError("Role must be 'user' or 'assistant'.")
+        raise ValueError("Invalid message role.")
 
-    with get_connection() as connection:
-        connection.execute(
-            """
-            INSERT INTO messages (conversation_id, role, content)
-            VALUES (?, ?, ?)
-            """,
-            (conversation_id, role, content),
-        )
+    conversation = st.session_state.chat_conversations.get(
+        conversation_id
+    )
 
-        connection.execute(
-            """
-            UPDATE conversations
-            SET updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-            """,
-            (conversation_id,),
-        )
+    if conversation is None:
+        raise ValueError("Conversation not found.")
+
+    conversation["messages"].append({
+        "id": len(conversation["messages"]) + 1,
+        "conversation_id": conversation_id,
+        "role": role,
+        "content": content,
+        "created_at": datetime.now().isoformat(),
+    })
+
+    conversation["updated_at"] = datetime.now().isoformat()
 
 
 def get_messages(conversation_id):
-    with get_connection() as connection:
-        rows = connection.execute(
-            """
-            SELECT id, conversation_id, role, content, created_at
-            FROM messages
-            WHERE conversation_id = ?
-            ORDER BY id ASC
-            """,
-            (conversation_id,),
-        ).fetchall()
+    initialize_chat_storage()
 
-        return [dict(row) for row in rows]
+    conversation = st.session_state.chat_conversations.get(
+        conversation_id
+    )
+
+    if conversation is None:
+        return []
+
+    return conversation["messages"]
 
 
 def rename_conversation(conversation_id, title):
+    initialize_chat_storage()
+
     title = title.strip()
 
     if not title:
         raise ValueError("Conversation title cannot be empty.")
 
-    with get_connection() as connection:
-        connection.execute(
-            """
-            UPDATE conversations
-            SET title = ?, updated_at = CURRENT_TIMESTAMP
-            WHERE id = ?
-            """,
-            (title, conversation_id),
-        )
+    conversation = st.session_state.chat_conversations.get(
+        conversation_id
+    )
+
+    if conversation:
+        conversation["title"] = title
+        conversation["updated_at"] = datetime.now().isoformat()
 
 
 def delete_conversation(conversation_id):
-    with get_connection() as connection:
-        connection.execute(
-            "DELETE FROM conversations WHERE id = ?",
-            (conversation_id,),
-        )
+    initialize_chat_storage()
+
+    st.session_state.chat_conversations.pop(
+        conversation_id, None
+    )

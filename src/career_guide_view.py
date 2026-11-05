@@ -3,6 +3,7 @@ import streamlit as st
 
 from src.ai_career_guide import ask_career_guide
 from src.chat_storage import (
+    initialize_chat_storage,
     create_conversation,
     delete_conversation,
     get_conversations,
@@ -18,6 +19,9 @@ def start_new_chat():
 
 
 def render_career_guide():
+    # Initialize temporary chat storage.
+    initialize_chat_storage()
+
     if "active_conversation_id" not in st.session_state:
         st.session_state.active_conversation_id = None
 
@@ -33,13 +37,18 @@ def render_career_guide():
             start_new_chat()
             st.rerun()
 
-    # Allow users to choose a saved chat without opening one automatically.
+    # Display saved conversations from the current session.
     options = {
         conversation["id"]: conversation["title"]
         for conversation in conversations
     }
 
     active_id = st.session_state.active_conversation_id
+
+    # Reset active conversation if it no longer exists.
+    if active_id not in options:
+        st.session_state.active_conversation_id = None
+        active_id = None
 
     with col2:
         selected_id = st.selectbox(
@@ -52,9 +61,7 @@ def render_career_guide():
             ),
             index=(
                 [None] + list(options.keys())
-            ).index(active_id)
-            if active_id in options
-            else 0,
+            ).index(active_id),
             key="selected_chat",
         )
 
@@ -73,28 +80,39 @@ def render_career_guide():
             col_rename, col_delete = st.columns(2)
 
             with col_rename:
-                if st.button("Rename chat", key=f"rename_{selected_id}"):
+                if st.button(
+                    "Rename chat",
+                    key=f"rename_{selected_id}",
+                ):
                     if new_title.strip():
-                        rename_conversation(selected_id, new_title)
+                        rename_conversation(
+                            selected_id,
+                            new_title,
+                        )
                         st.rerun()
                     else:
                         st.warning("Please enter a chat title.")
 
             with col_delete:
-                if st.button("Delete chat", key=f"delete_{selected_id}"):
+                if st.button(
+                    "Delete chat",
+                    key=f"delete_{selected_id}",
+                ):
                     delete_conversation(selected_id)
                     st.session_state.active_conversation_id = None
                     st.session_state.selected_chat = None
                     st.rerun()
 
-    # No active selection means a fresh welcome screen.
+    # Get messages from the active conversation.
     conversation_id = st.session_state.active_conversation_id
+
     messages = (
         get_messages(conversation_id)
         if conversation_id is not None
         else []
     )
 
+    # Display welcome screen when there is no active conversation.
     if conversation_id is None or not messages:
         st.markdown(
             """
@@ -152,12 +170,15 @@ def render_career_guide():
                 )
                 st.rerun()
 
+    # Display existing messages.
     for message in messages:
         with st.chat_message(message["role"]):
             st.markdown(message["content"])
 
+    # Handle suggested questions.
     suggested_question = st.session_state.pop(
-        "suggested_question", None
+        "suggested_question",
+        None,
     )
 
     question = st.chat_input("Ask your career question...")
@@ -166,13 +187,15 @@ def render_career_guide():
         question = suggested_question
 
     if question:
-        # Create a conversation only when the user sends their first question.
+        # Create a conversation when the first question is submitted.
         if conversation_id is None:
             conversation_id = create_conversation()
             st.session_state.active_conversation_id = conversation_id
 
+        # Save the user's question.
         save_message(conversation_id, "user", question)
 
+        # Prepare previous messages for Gemini.
         chat_history = [
             {
                 "role": (
@@ -185,18 +208,23 @@ def render_career_guide():
             for message in get_messages(conversation_id)[:-1]
         ]
 
+        # Generate AI response.
         with st.chat_message("assistant"):
             with st.spinner("Thinking..."):
                 answer = ask_career_guide(
                     question,
                     chat_history=chat_history,
                 )
+
                 st.markdown(answer)
 
+        # Save the assistant response.
         save_message(conversation_id, "assistant", answer)
 
+        # Automatically generate a title for new conversations.
         if not messages:
             title = question.strip().replace("\n", " ")
+
             if len(title) > 40:
                 title = title[:37].rstrip() + "..."
 
